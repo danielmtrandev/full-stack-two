@@ -12,6 +12,6 @@
 
 Modified from Scotch.io's auth tutorial
 
-<img src="watercounter.png"></img>
+<img src="waterCounter.png"></img>
 
 Link to live site: [https://danielmtran-watercounter.netlify.app]
