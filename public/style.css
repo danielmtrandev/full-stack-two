@@ -1,0 +1,17 @@
+body{
+  padding-top:80px;
+  word-wrap:break-word;
+  background-image: url(https://i.pinimg.com/originals/ea/a9/63/eaa96374b2f67305090496b0cc47c424.jpg);
+  background-size:cover;
+}
+img{
+  height: 200px;
+}
+
+
+.container{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
