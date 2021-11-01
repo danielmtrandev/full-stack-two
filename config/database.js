@@ -1,6 +1,8 @@
-// config/database.js
 module.exports = {
 
-    'url' : 'mongodb+srv://Daniel:SzHInKisNNrW1sfq@cluster0.bbitw.mongodb.net/waterCounter?retryWrites=true&w=majority', 
-    'dbName': 'waterCounter'
+  'url' :'mongodb+srv://Daniel:SzHInKisNNrW1sfq@cluster0.bbitw.mongodb.net/waterApp?retryWrites=true&w=majority', 
+  'dbName': 'waterApp'
 };
+
+
+

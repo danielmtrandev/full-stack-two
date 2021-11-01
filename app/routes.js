@@ -1,145 +1,175 @@
-module.exports = function (app, passport, db) {
-	// normal routes ===============================================================
+const mongoose = require('mongoose');
+var ObjectId = require('mongodb').ObjectID;
+module.exports = function(app, passport, db) {
 
-	// show the home page (will also have our login links)
-	app.get('/', function (req, res) {
-		res.render('index.ejs');
-	});
+// normal routes ===============================================================
 
-	// PROFILE SECTION =========================
-	app.get('/profile', isLoggedIn, function (req, res) {
-		db.collection('waterTracker')
-			.find()
-			.toArray((err, result) => {
-				if (err) return console.log(err);
-				res.render('profile.ejs', {
-					user: req.user,
-					messages: result,
-					// time: req.query.time,
-					// total: req.query.total
-				});
-			});
-	});
+    // show the home page (will also have our login links)
+    app.get('/', function(req, res) {
+        res.render('index.ejs');
+    });
 
-	app.put('/upVote', (req, res) => {
-		db.collection('messages').findOneAndUpdate(
-			{ name: req.body.name, msg: req.body.msg },
-			{
-				$set: {
-					thumbUp: req.body.thumbUp + 1,
-				},
-			},
-			{
-				sort: { _id: -1 },
-				upsert: true,
-			},
-			(err, result) => {
-				if (err) return res.send(err);
-				res.send(result);
-			}
-		);
-	});
+    // PROFILE SECTION =========================
+    app.get('/profile', isLoggedIn, function(req, res) {
+      console.log(req.user._id)
+        db.collection('waterApp').find({createdBy: req.user._id}).toArray((err, result) => {
+          if (err) return console.log(err)
+          console.log('profileWorking',result)
+          res.render('profile.ejs', {
+            messages: result,
+            email:req.user.local.email
+          })
+          
+          console.log('profileWorking',result)
+        })
+    });
+    
 
-	// LOGOUT ==============================
-	app.get('/logout', function (req, res) {
-		req.logout();
-		res.redirect('/');
-	});
+    app.put('/profile', (req, res) => {
+        db.collection('waterApp')
+        .findOneAndUpdate({date: req.body.date, msg: req.body.msg}, {
+          $inc: {
+           thumbUp:req.body.thumbUp + 1
+          }
+        }, {
+          sort: {_id: -1},
+          upsert: true
+        }, (err, result) => {
+          if (err) return res.send(err)
+          res.send(result)
+        })
+      })
 
-	// message board routes ===============================================================
+    // LOGOUT ==============================
+    app.get('/logout', function(req, res) {
+        req.logout();
+        res.redirect('/');
+    });
 
-	app.post('/messages', (req, res) => {
-		db.collection('waterTracker').save(
-			{
-				time: req.body.time,
-				waterAmount: req.body.waterAmount,
-				date: req.body.date,
-			},
-			(err, result) => {
-				if (err) return console.log(err);
-				console.log('saved to database');
-				res.redirect('/profile');
-			}
-		);
-	});
+// message board routes ===============================================================
+
+    //  app.post('/profile', (req, res) => {
+    //   db.collection('waterApp').save({date: req.body.date, time: req.body.time, amount: req.body.amount}, (err, result) => {
+    //     if (err) return console.log(err)
+    //      console.log('saved to database')
+    //     res.redirect('/profile')
+    //   })
+    // })
+    app.post('/profile', (req, res) => {
+      db.collection('waterApp').insertOne({date: req.body.date, time: req.body.time, amount: req.body.amount, createdBy: req.user._id}, (err, result) => {
+        if (err) return console.log(err)
+        console.log('saved to databaseTWO')
+        res.redirect('/profile')
+      })
+    })
+    app.delete('/delete', (req, res) => {
+      db.collection('waterApp').findOneAndDelete({_id: new mongoose.mongo.ObjectID(req.body.id)}, (err, result) => {
+        if (err) return res.send(500, err)
+        res.send('Message deleted!')
+      })
+    })
 
 
-	app.delete('/messages', (req, res) => {
-		db.collection('waterTracker').findOneAndDelete(
-			{ time: req.body.time, waterAmount: req.body.waterAmount },
-			(err, result) => {
-				if (err) return res.send(500, err);
-				res.send({ result: 'Message deleted!' });
-			}
-		);
-	});
 
-	// =============================================================================
-	// AUTHENTICATE (FIRST LOGIN) ==================================================
-	// =============================================================================
+    // app.put('/upVote', (req, res) => {
+    //   db.collection('messages')
+    //   .findOneAndUpdate({name: req.body.name, msg: req.body.msg}, {
+    //     $set: {
+    //       thumbUp:req.body.thumbUp + 1
+    //     }
+    //   }, {
+    //     sort: {_id: -1},
+    //     upsert: true
+    //   }, (err, result) => {
+    //     if (err) return res.send(err)
+    //     res.send(result)
+    //   })
+    // })
 
-	// locally --------------------------------
-	// LOGIN ===============================
-	// show the login form
-	app.get('/login', function (req, res) {
-		res.render('login.ejs', { message: req.flash('loginMessage') });
-	});
+    // app.put('/downVote', (req, res) => {
+    //   db.collection('messages')
+    //   .findOneAndUpdate({name: req.body.name, msg: req.body.msg}, {
+    //     $set: {
+    //       thumbUp:req.body.thumbDown - 1
+    //     }
+    //   }, {
+    //     sort: {_id: -1},
+    //     upsert: true
+    //   }, (err, result) => {
+    //     if (err) return res.send(err)
+    //     res.send(result)
+    //   })
+    // })
 
-	// process the login form
-	app.post(
-		'/login',
-		passport.authenticate('local-login', {
-			successRedirect: '/profile', // redirect to the secure profile section
-			failureRedirect: '/login', // redirect back to the signup page if there is an error
-			failureFlash: true, // allow flash messages
-		})
-	);
+    // app.delete('/messages', (req, res) => {
+    //   db.collection('messages').findOneAndDelete({name: req.body.name, msg: req.body.msg}, (err, result) => {
+    //     if (err) return res.send(500, err)
+    //     res.send('Message deleted!')
+    //   })
+    // })
 
-	// SIGNUP =================================
-	// show the signup form
-	app.get('/signup', function (req, res) {
-		res.render('signup.ejs', { message: req.flash('signupMessage') });
-	});
+// =============================================================================
+// AUTHENTICATE (FIRST LOGIN) ==================================================
+// =============================================================================
 
-	// process the signup form
-	app.post(
-		'/signup',
-		passport.authenticate('local-signup', {
-			successRedirect: '/profile', // redirect to the secure profile section
-			failureRedirect: '/signup', // redirect back to the signup page if there is an error
-			failureFlash: true, // allow flash messages
-		})
-	);
+    // locally --------------------------------
+        // LOGIN ===============================
+        // show the login form
+        app.get('/login', function(req, res) {
+            res.render('login.ejs', { message: req.flash('loginMessage') });
+        });
 
-	// =============================================================================
-	// UNLINK ACCOUNTS =============================================================
-	// =============================================================================
-	// used to unlink accounts. for social accounts, just remove the token
-	// for local account, remove email and password
-	// user account will stay active in case they want to reconnect in the future
+        // process the login form
+        app.post('/login', passport.authenticate('local-login', {
+            successRedirect : '/profile', // redirect to the secure profile section
+            failureRedirect : '/login', // redirect back to the signup page if there is an error
+            failureFlash : true // allow flash messages
+        }));
 
-	// local -----------------------------------
-	app.get('/unlink/local', isLoggedIn, function (req, res) {
-		var user = req.user;
-		user.local.email = undefined;
-		user.local.password = undefined;
-		user.save(function (err) {
-			res.redirect('/profile');
-		});
-	});
+        // SIGNUP =================================
+        // show the signup form
+        app.get('/signup', function(req, res) {
+            res.render('signup.ejs', { message: req.flash('signupMessage') });
+        });
+
+        // process the signup form
+        app.post('/signup', passport.authenticate('local-signup', {
+            successRedirect : '/profile', // redirect to the secure profile section
+            failureRedirect : '/signup', // redirect back to the signup page if there is an error
+            failureFlash : true // allow flash messages
+        }));
+
+// =============================================================================
+// UNLINK ACCOUNTS =============================================================
+// =============================================================================
+// used to unlink accounts. for social accounts, just remove the token
+// for local account, remove email and password
+// user account will stay active in case they want to reconnect in the future
+
+    // local -----------------------------------
+    app.get('/unlink/local', isLoggedIn, function(req, res) {
+        var user            = req.user;
+        user.local.email    = undefined;
+        user.local.password = undefined;
+        user.save(function(err) {
+            res.redirect('/profile');
+        });
+    });
+
 };
 
 // route middleware to ensure user is logged in
 function isLoggedIn(req, res, next) {
-	if (req.isAuthenticated()) return next();
+    if (req.isAuthenticated())
+        return next();
 
-	res.redirect('/');
+    res.redirect('/');
 }
 
 // `{$group: {_id: null,
 
 //   total: { $sum: '$amountDrank'}}
-//   }
+//   } 
 //   ]).toArray().then((result) => {
 //   console.log(result)
 //   let total = (result.length === 0 ) ? 0 : result[0].total

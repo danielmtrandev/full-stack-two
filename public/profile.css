@@ -1,0 +1,31 @@
+body{
+  background-image: url(https://i.pinimg.com/originals/ea/a9/63/eaa96374b2f67305090496b0cc47c424.jpg);
+}
+h1{
+  color: royalblue;
+  }
+
+.messages{
+  border-style: inset;
+  border-width: 4px;
+  height: 200px;
+  width: 400px;
+  font-size: 20px;
+  
+  
+}
+
+.container{
+  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+button{
+  color: royalblue;
+ 
+}
+.btn{
+  color: royalblue;
+}
